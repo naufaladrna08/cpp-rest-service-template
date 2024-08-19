@@ -1,0 +1,12 @@
+[submodule "vendor/dotenv"]
+	path = vendor/dotenv
+	url = https://github.com/adeharo9/cpp-dotenv
+[submodule "vendor/bcrypt"]
+	path = vendor/bcrypt
+	url = https://github.com/hilch/Bcrypt.cpp.git
+[submodule "vendor/json-c"]
+	path = vendor/json-c
+	url = https://github.com/json-c/json-c
+[submodule "vendor/jwt-cpp"]
+	path = vendor/jwt-cpp
+	url = https://github.com/Thalhammer/jwt-cpp
