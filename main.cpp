@@ -12,7 +12,10 @@
 #include <core/Connection.h>
 
 #include <controllers/UserController.h>
+#include <controllers/ProjectController.h>
+#include <controllers/RBACController.h>
 #include <middleware/JwtAuth.h>
+#define APP_PORT 8080
 
 namespace net = boost::asio;
 using tcp = net::ip::tcp;
@@ -21,7 +24,8 @@ typedef struct {
   std::string method;
   std::string path;
   std::function<void(const Request&, Response*)> controller;
-  std::function<bool(const Request&, Response*)> middleware;
+  std::function<bool(const Request&, Response*, void* userdata)> middleware;
+  void* userdata;
 } Route;
 
 class Router {
@@ -31,12 +35,21 @@ class Router {
       this->m_res = res;
     }
 
-    void connect(const std::string& method, const std::string& path, std::function<void(const Request&, Response*)> controller, std::function<bool(const Request&, Response*)> middleware = nullptr) {
+    void connect(
+      const std::string& method, const std::string& path, 
+      std::function<void(const Request&, Response*)> controller, 
+      std::function<bool(const Request&, Response*, void* userdata)> middleware = nullptr,
+      void* data = nullptr
+    ) {
       Route route;
       route.method = method;
       route.path = path;
       route.controller = std::move(controller);
       route.middleware = std::move(middleware);
+      
+      if (data != nullptr) {
+        route.userdata = data;
+      }
 
       m_routes.push_back(route);
     }
@@ -45,12 +58,21 @@ class Router {
       for (const auto& route : m_routes) {
         if (route.method == m_req->method_string() && route.path == m_req->target()) {
           if (route.middleware != nullptr) {
-            if (!route.middleware(*m_req, m_res)) {
+            if (!route.middleware(*m_req, m_res, route.userdata)) {
               return;
             }
           }
 
-          route.controller(*m_req, m_res);
+          /* For syntax error, etc/ */
+          try {
+            route.controller(*m_req, m_res);
+          } catch (const std::exception& e) {
+            m_res->result(boost::beast::http::status::internal_server_error);
+            json_object* response = json_object_new_object();
+            json_object_object_add(response, "error", json_object_new_string(e.what()));
+            m_res->body() = json_object_to_json_string(response);
+            m_res->prepare_payload();
+          }
           return;
         }
       }
@@ -68,6 +90,7 @@ class Router {
 
     Request* m_req;
     Response* m_res;
+    void* m_data;
 };
 
 class App {
@@ -101,10 +124,24 @@ void handleRequests(Request req, Response& res) {
   }
 
   Router route(&req, &res);
-  route.connect("POST", "/register", UserController::registerUser);
-  route.connect("POST", "/login", UserController::login);
+  route.connect("POST", "/auth/register", UserController::registerUser);
+  route.connect("POST", "/auth/login", UserController::login);
+  route.connect("GET", "/auth/me", UserController::profile, JwtAuth::verifyToken);
   route.connect("GET", "/users", UserController::getAllUsers);
-  route.connect("GET", "/profile", UserController::profile, JwtAuth::verifyToken);
+
+  // Projects
+  route.connect("POST", "/project/create", ProjectController::createProject, JwtAuth::verifyToken);
+  // route.connect("GET", "/project/get-projects", ProjectController::getProjects, JwtAuth::verifyToken);
+  // route.connect("GET", "/project/get-project", ProjectController::getProject, JwtAuth::verifyToken);
+  // route.connect("PUT", "/project/update-project", ProjectController::updateProject, JwtAuth::verifyToken);
+  // route.connect("DELETE", "/project/delete-project", ProjectController::deleteProject, JwtAuth::verifyToken);
+
+  // RBAC
+  MiddlewareUserdata userdata;
+  userdata.role = "Superuser";
+  route.connect("POST", "/role/create", RBACController::createRole, JwtAuth::verifyTokenWithRole, &userdata);
+  route.connect("POST", "/role/permission/create", RBACController::createPermission, JwtAuth::verifyTokenWithRole, &userdata);
+  route.connect("POST", "/role/assign", RBACController::assignRole, JwtAuth::verifyTokenWithRole, &userdata);
 
   App app;
   app.useRoute(route);
@@ -116,11 +153,11 @@ int main(int argc, char** argv) {
 
     /* Initialize DB Connection */
     const std::string connectionStr = "dbname=" + dotenv::env["DB_NAME"] + " user=" + dotenv::env["DB_USER"] + " password=" + dotenv::env["DB_PASS"] + " hostaddr=" + dotenv::env["DB_HOST"] + " port=" + dotenv::env["DB_PORT"];
-    std::cout << "Connecting to database with connection string " << connectionStr << std::endl;
+    std::cout << "Running on port " << APP_PORT << std::endl;
     Connection::getInstance(connectionStr);
 
     net::io_context ioc;
-    tcp::acceptor acceptor(ioc, {tcp::v4(), 8081});
+    tcp::acceptor acceptor(ioc, {tcp::v4(), APP_PORT});
 
     while (true) {
       std::cout << "Waiting for request..." << std::endl;
@@ -137,8 +174,8 @@ int main(int argc, char** argv) {
       boost::beast::http::write(socket, res);
       socket.shutdown(tcp::socket::shutdown_send);
     }
-  } catch (std::exception const &e) {
-    std::cerr << e.what() << std::endl;
+  }  catch (std::exception const &e) {
+    std::cerr << "[EXCEPTION]: " << e.what() << std::endl;
     return 1;
   }
 }

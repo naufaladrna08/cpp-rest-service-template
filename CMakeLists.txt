@@ -28,12 +28,20 @@ include_directories(
 
 add_executable(template_service main.cpp
   include/controllers/UserController.h
+  include/controllers/RBACController.h
+  include/controllers/ProjectController.h
   include/core/types.h
   include/core/DB.h
   include/core/Connection.h
+  include/core/exceptions/HttpException.h
+  include/helpers/RequestHelper.h
   include/middleware/JwtAuth.h
   src/core/Connection.cpp
+  src/core/exceptions/HttpException.cpp
+  src/helpers/RequestHelper.cpp
   src/controllers/UserController.cpp
+  src/controllers/RBACController.cpp
+  src/controllers/ProjectController.cpp
   src/middleware/JwtAuth.cpp
   src/core/DB.cpp
 )

@@ -25,12 +25,29 @@ Connection& Connection::getInstance(const std::string& connectionString) {
 Connection::Connection() : m_isInitialized(false) {}
 
 auto Connection::execute(const std::string& query) -> pqxx::result {
-  pqxx::work txn(*m_connection);
-  pqxx::result result = txn.exec(query);
-  txn.commit();
-
+  pqxx::nontransaction trx(*m_connection);
+  pqxx::result result = trx.exec(query);
   return result;
 }
+
+auto Connection::executeWithTransaction(const std::string& query) -> pqxx::result {
+  return m_transaction->exec(query);
+}
+
+void Connection::beginTransaction() {
+  m_transaction = new pqxx::work(*m_connection);
+}
+
+void Connection::commitTransaction() {
+  m_transaction->commit();
+  delete m_transaction;
+}
+
+void Connection::rollbackTransaction() {
+  m_transaction->abort();
+  delete m_transaction;
+}
+
 
 // Connection::~Connection() {
 //   if (m_connection) {
