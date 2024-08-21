@@ -53,10 +53,10 @@ void UserController::login(Request req, Response *res) {
 
 void UserController::registerUser(Request req, Response *res) {
   json_object* body = json_tokener_parse(req.body().c_str());
-  const char* name = json_object_get_string(json_object_object_get(body, "name"));
-  const char* username = json_object_get_string(json_object_object_get(body, "username"));
-  const char* password = json_object_get_string(json_object_object_get(body, "password"));
-  const char* email = json_object_get_string(json_object_object_get(body, "email"));
+  std::string name = RequestHelper::getJsonSafeString(body, "name");
+  std::string username = RequestHelper::getJsonSafeString(body, "username");
+  std::string password = RequestHelper::getJsonSafeString(body, "password");
+  std::string email = RequestHelper::getJsonSafeString(body, "email");
   std::string passwordHash = bcrypt::generateHash(password);
 
   std::string checkQuery = DB::prepare("SELECT * FROM users WHERE username = ':username' OR email = ':email'")

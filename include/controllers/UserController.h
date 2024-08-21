@@ -3,6 +3,7 @@
 #include <core/types.h>
 #include <core/DB.h>
 #include <core/Connection.h>
+#include <helpers/RequestHelper.h>
 #include <json.h>
 #include <bcrypt.h>
 #include <jwt-cpp/jwt.h>
