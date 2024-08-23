@@ -4,12 +4,22 @@
 #include <core/types.h>
 #include <core/DB.h>
 #include <core/Connection.h>
+#include <helpers/RequestHelper.h>
+#include <core/exceptions/HttpException.h>
 #include <json.h>
 #include <bcrypt.h>
 #include <jwt-cpp/jwt.h>
 
 class ProjectController {
   public:
+    /**
+     * @brief [POST] Create a new project
+     * 
+     * Body Request:
+     * @name Project Name
+     * @description Project Description
+     * @type Project Type (e.g. Animation, Game, Tools)
+     */
     static void createProject(const Request& req, Response* res);
     // static void getProjects(const Request& req, Response* res);
     // static void getProject(const Request& req, Response* res);
