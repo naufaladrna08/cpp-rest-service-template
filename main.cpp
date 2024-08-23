@@ -109,19 +109,16 @@ class App {
 };
 
 void handleRequests(Request req, Response& res) {
+  std::string allowedOrigin = dotenv::env["ALLOWED_ORIGIN"];
+
   res.version(req.version());
   res.result(boost::beast::http::status::ok);
   res.set(boost::beast::http::field::server, "Boost.Beast Server");
   res.set(boost::beast::http::field::content_type, "application/json");
-
-  // OPTIONS CORS
-  if (req.method() == boost::beast::http::verb::options) {
-    res.set(boost::beast::http::field::access_control_allow_origin, "*");
-    res.set(boost::beast::http::field::access_control_allow_methods, "GET, POST, OPTIONS");
-    res.set(boost::beast::http::field::access_control_allow_headers, "Content-Type");
-    res.set(boost::beast::http::field::access_control_max_age, "86400");
-    return;
-  }
+  res.set(boost::beast::http::field::access_control_allow_origin, allowedOrigin);
+  res.set(boost::beast::http::field::access_control_allow_methods, "GET, POST, OPTIONS");
+  res.set(boost::beast::http::field::access_control_allow_headers, "Content-Type");
+  res.set(boost::beast::http::field::access_control_max_age, "86400");
 
   Router route(&req, &res);
   route.connect("POST", "/auth/register", UserController::registerUser);
@@ -129,19 +126,19 @@ void handleRequests(Request req, Response& res) {
   route.connect("GET", "/auth/me", UserController::profile, JwtAuth::verifyToken);
   route.connect("GET", "/users", UserController::getAllUsers);
 
-  // Projects
-  route.connect("POST", "/project/create", ProjectController::createProject, JwtAuth::verifyToken);
-  // route.connect("GET", "/project/get-projects", ProjectController::getProjects, JwtAuth::verifyToken);
-  // route.connect("GET", "/project/get-project", ProjectController::getProject, JwtAuth::verifyToken);
-  // route.connect("PUT", "/project/update-project", ProjectController::updateProject, JwtAuth::verifyToken);
-  // route.connect("DELETE", "/project/delete-project", ProjectController::deleteProject, JwtAuth::verifyToken);
-
   // RBAC
   MiddlewareUserdata userdata;
   userdata.role = "Superuser";
   route.connect("POST", "/role/create", RBACController::createRole, JwtAuth::verifyTokenWithRole, &userdata);
   route.connect("POST", "/role/permission/create", RBACController::createPermission, JwtAuth::verifyTokenWithRole, &userdata);
   route.connect("POST", "/role/assign", RBACController::assignRole, JwtAuth::verifyTokenWithRole, &userdata);
+
+   // Projects
+  route.connect("POST", "/project/create", ProjectController::createProject, JwtAuth::verifyTokenWithRole, &userdata);
+  // route.connect("GET", "/project/get-projects", ProjectController::getProjects, JwtAuth::verifyToken);
+  // route.connect("GET", "/project/get-project", ProjectController::getProject, JwtAuth::verifyToken);
+  // route.connect("PUT", "/project/update-project", ProjectController::updateProject, JwtAuth::verifyToken);
+  // route.connect("DELETE", "/project/delete-project", ProjectController::deleteProject, JwtAuth::verifyToken);
 
   App app;
   app.useRoute(route);
