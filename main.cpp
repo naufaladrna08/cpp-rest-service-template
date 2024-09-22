@@ -122,7 +122,6 @@ void handleRequests(Request req, Response& res) {
 
   Router route(&req, &res);
   route.connect("POST", "/auth/register", UserController::registerUser);
-  route.connect("POST", "/auth/create-user", UserController::createUser);
   route.connect("POST", "/auth/login", UserController::login);
   route.connect("GET", "/auth/me", UserController::profile, JwtAuth::verifyToken);
   route.connect("GET", "/users", UserController::getAllUsers);

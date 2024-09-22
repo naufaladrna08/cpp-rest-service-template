@@ -51,50 +51,40 @@ void UserController::login(Request req, Response *res) {
   res->prepare_payload();
 }
 
-void UserController::registerUser(Request req, Response *res) {
+
+void UserController::registerUser(Request req, Response* res) {
   json_object* body = json_tokener_parse(req.body().c_str());
   std::string name = RequestHelper::getJsonSafeString(body, "name");
   std::string username = RequestHelper::getJsonSafeString(body, "username");
   std::string password = RequestHelper::getJsonSafeString(body, "password");
-  std::string email = RequestHelper::getJsonSafeString(body, "email");
-  std::string passwordHash = bcrypt::generateHash(password);
 
-  std::string checkQuery = DB::prepare("SELECT * FROM users WHERE username = ':username' OR email = ':email'")
-    ->bind(":username", username)
-    ->bind(":email", email)
-    ->get();
+  json_object* response = json_object_new_object();
+  try {
+    std::unique_ptr<User> user = std::make_unique<User>();
+    std::unique_ptr<User> existingUser = user->findByValue<User>("username", username);
+    if (existingUser != nullptr) {
+      throw HttpException(400, "Username already exists.");
+    }
 
-  auto checkResult = Connection::getInstance().execute(checkQuery);
-  if (!checkResult.empty()) {
-    res->result(boost::beast::http::status::conflict);
-    json_object* response = json_object_new_object();
-    json_object_object_add(response, "error", json_object_new_string("Username or email already exists."));
+    user->fill("name", name);
+    user->fill("username", username);
+    user->fill("password", bcrypt::generateHash(password));
+    if (!user->save()) {
+      throw HttpException(500, "An error occurred while creating the user.");
+    }
+
+    res->result(boost::beast::http::status::ok);
+    json_object_object_add(response, "message", json_object_new_string("User created successfully."));
+  } catch (const HttpException& e) {
+    res->result(boost::beast::http::int_to_status(e.code()));
+    json_object_object_add(response, "message", json_object_new_string(e.what()));
     res->body() = json_object_to_json_string(response);
     res->prepare_payload();
     return;
   }
 
-  std::string query = DB::prepare("INSERT INTO users (name, username, password, email, created_at) VALUES (':name', ':username', ':password', ':email', NOW())")
-    ->bind(":name", name)
-    ->bind(":username", username)
-    ->bind(":password", passwordHash.c_str())
-    ->bind(":email", email)
-    ->get(); 
-
-  auto result = Connection::getInstance().execute(query);
-  if (result.empty()) {
-    res->result(boost::beast::http::status::ok);
-    json_object* response = json_object_new_object();
-    json_object_object_add(response, "message", json_object_new_string("User registered successfully."));
-    res->body() = json_object_to_json_string(response);
-    res->prepare_payload();
-  } else {
-    res->result(boost::beast::http::status::internal_server_error);
-    json_object* response = json_object_new_object();
-    json_object_object_add(response, "error", json_object_new_string("An error occurred while registering the user."));
-    res->body() = json_object_to_json_string(response);
-    res->prepare_payload();
-  }
+  res->body() = json_object_to_json_string(response);
+  res->prepare_payload();
 }
 
 void UserController::getAllUsers(Request req, Response *res) {
@@ -162,41 +152,6 @@ void UserController::profile(Request req, Response *res) {
   json_object_object_add(response, "code", json_object_new_int(200));
   json_object_object_add(response, "data", user);
   json_object_object_add(response, "message", json_object_new_string("User profile retrieved successfully."));
-  res->body() = json_object_to_json_string(response);
-  res->prepare_payload();
-}
-
-void UserController::createUser(Request req, Response* res) {
-  json_object* body = json_tokener_parse(req.body().c_str());
-  std::string name = RequestHelper::getJsonSafeString(body, "name");
-  std::string username = RequestHelper::getJsonSafeString(body, "username");
-  std::string password = RequestHelper::getJsonSafeString(body, "password");
-
-  json_object* response = json_object_new_object();
-  try {
-    std::unique_ptr<User> user = std::make_unique<User>();
-    std::unique_ptr<User> existingUser = user->findByValue<User>("username", username);
-    if (existingUser != nullptr) {
-      throw HttpException(400, "Username already exists.");
-    }
-
-    user->fill("name", name);
-    user->fill("username", username);
-    user->fill("password", bcrypt::generateHash(password));
-    if (!user->save()) {
-      throw HttpException(500, "An error occurred while creating the user.");
-    }
-
-    res->result(boost::beast::http::status::ok);
-    json_object_object_add(response, "message", json_object_new_string("User created successfully."));
-  } catch (const HttpException& e) {
-    res->result(boost::beast::http::int_to_status(e.code()));
-    json_object_object_add(response, "message", json_object_new_string(e.what()));
-    res->body() = json_object_to_json_string(response);
-    res->prepare_payload();
-    return;
-  }
-
   res->body() = json_object_to_json_string(response);
   res->prepare_payload();
 }

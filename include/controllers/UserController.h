@@ -12,7 +12,6 @@
 
 class UserController {
   public:
-    static void createUser(Request req, Response* res);
     static void registerUser(Request req, Response* res);
     static void login(Request req, Response* res);
     static void getAllUsers(Request req, Response* res);
