@@ -34,11 +34,17 @@ add_executable(template_service main.cpp
   include/core/DB.h
   include/core/Connection.h
   include/core/exceptions/HttpException.h
+  include/core/database/Schema.h
+  include/core/database/Model.h
   include/helpers/RequestHelper.h
   include/middleware/JwtAuth.h
   src/core/Connection.cpp
   src/core/exceptions/HttpException.cpp
+  src/core/database/Schema.cpp
+  src/core/database/Model.cpp
   src/helpers/RequestHelper.cpp
+
+  src/models/User.cpp
   src/controllers/UserController.cpp
   src/controllers/RBACController.cpp
   src/controllers/ProjectController.cpp

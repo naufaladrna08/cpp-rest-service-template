@@ -98,15 +98,35 @@ void UserController::registerUser(Request req, Response *res) {
 }
 
 void UserController::getAllUsers(Request req, Response *res) {
-  std::string selectQuery = "SELECT name, username FROM users";
-  auto result = Connection::getInstance().execute(selectQuery);
+  json_object* response = json_object_new_object();
+  
+  try {
+    auto users = User().select({"name", "username", "email", "user_roles.id AS role_id"})
+      ->join("user_roles", "id", "user_id")
+      ->get();
+    
+    if (users.empty()) {
+      throw HttpException(404, "No users found.");
+    }
 
-  json_object* response = json_object_new_array();
-  for (auto row : result) {
-    json_object* user = json_object_new_object();
-    json_object_object_add(user, "name", json_object_new_string(row["name"].c_str()));
-    json_object_object_add(user, "username", json_object_new_string(row["username"].c_str()));
-    json_object_array_add(response, user);
+    json_object* data = json_object_new_array();
+    for (const auto& user : users) {
+      json_object* userObj = json_object_new_object();
+      json_object_object_add(userObj, "name", json_object_new_string(user["name"].c_str()));
+      json_object_object_add(userObj, "username", json_object_new_string(user["username"].c_str()));
+      json_object_object_add(userObj, "email", json_object_new_string(user["email"].c_str()));
+      json_object_object_add(userObj, "role_id", json_object_new_int(std::stoi(user["role_id"].c_str())));
+      json_object_array_add(data, userObj);
+    }
+
+    json_object_object_add(response, "code", json_object_new_int(200));
+    json_object_object_add(response, "data", data);
+    json_object_object_add(response, "message", json_object_new_string("Users retrieved successfully."));
+  } catch (const HttpException& e) {
+    res->result(boost::beast::http::int_to_status(e.code()));
+    json_object_object_add(response, "error", json_object_new_string(e.what()));
+    res->body() = json_object_to_json_string(response);
+    res->prepare_payload();
   }
 
   res->body() = json_object_to_json_string(response);
@@ -142,6 +162,41 @@ void UserController::profile(Request req, Response *res) {
   json_object_object_add(response, "code", json_object_new_int(200));
   json_object_object_add(response, "data", user);
   json_object_object_add(response, "message", json_object_new_string("User profile retrieved successfully."));
+  res->body() = json_object_to_json_string(response);
+  res->prepare_payload();
+}
+
+void UserController::createUser(Request req, Response* res) {
+  json_object* body = json_tokener_parse(req.body().c_str());
+  std::string name = RequestHelper::getJsonSafeString(body, "name");
+  std::string username = RequestHelper::getJsonSafeString(body, "username");
+  std::string password = RequestHelper::getJsonSafeString(body, "password");
+
+  json_object* response = json_object_new_object();
+  try {
+    std::unique_ptr<User> user = std::make_unique<User>();
+    std::unique_ptr<User> existingUser = user->findByValue<User>("username", username);
+    if (existingUser != nullptr) {
+      throw HttpException(400, "Username already exists.");
+    }
+
+    user->fill("name", name);
+    user->fill("username", username);
+    user->fill("password", bcrypt::generateHash(password));
+    if (!user->save()) {
+      throw HttpException(500, "An error occurred while creating the user.");
+    }
+
+    res->result(boost::beast::http::status::ok);
+    json_object_object_add(response, "message", json_object_new_string("User created successfully."));
+  } catch (const HttpException& e) {
+    res->result(boost::beast::http::int_to_status(e.code()));
+    json_object_object_add(response, "message", json_object_new_string(e.what()));
+    res->body() = json_object_to_json_string(response);
+    res->prepare_payload();
+    return;
+  }
+
   res->body() = json_object_to_json_string(response);
   res->prepare_payload();
 }
