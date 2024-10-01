@@ -1,5 +1,8 @@
 #include <controllers/UserController.h>
 
+UserController::UserController() {
+}
+
 void UserController::login(Request req, Response *res) {
   json_object* body = json_tokener_parse(req.body().c_str());
   const char* username = json_object_get_string(json_object_object_get(body, "username"));
@@ -51,7 +54,6 @@ void UserController::login(Request req, Response *res) {
   res->prepare_payload();
 }
 
-
 void UserController::registerUser(Request req, Response* res) {
   json_object* body = json_tokener_parse(req.body().c_str());
   std::string name = RequestHelper::getJsonSafeString(body, "name");
@@ -60,18 +62,24 @@ void UserController::registerUser(Request req, Response* res) {
 
   json_object* response = json_object_new_object();
   try {
-    std::unique_ptr<User> user = std::make_unique<User>();
-    std::unique_ptr<User> existingUser = user->findByValue<User>("username", username);
-    if (existingUser != nullptr) {
-      throw HttpException(400, "Username already exists.");
-    }
+    // std::unique_ptr<User> user = std::make_unique<User>();
+    // std::unique_ptr<User> existingUser = user->findByValue<User>("username", username);
+    // if (existingUser != nullptr) {
+    //   throw HttpException(400, "Username already exists.");
+    // }
 
-    user->fill("name", name);
-    user->fill("username", username);
-    user->fill("password", bcrypt::generateHash(password));
-    if (!user->save()) {
-      throw HttpException(500, "An error occurred while creating the user.");
-    }
+    // user->fill("name", name);
+    // user->fill("username", username);
+    // user->fill("password", bcrypt::generateHash(password));
+    // if (!user->save()) {
+    //   throw HttpException(500, "An error occurred while creating the user.");
+    // }
+
+    std::unique_ptr<odb::core::database> db(new odb::pgsql::database("postgres", "12341234", "app", "localhost"));
+    odb::core::transaction t(db->begin());
+    users u(name, username, bcrypt::generateHash(password));
+    db->persist(u);
+    t.commit();
 
     res->result(boost::beast::http::status::ok);
     json_object_object_add(response, "message", json_object_new_string("User created successfully."));
@@ -154,4 +162,9 @@ void UserController::profile(Request req, Response *res) {
   json_object_object_add(response, "message", json_object_new_string("User profile retrieved successfully."));
   res->body() = json_object_to_json_string(response);
   res->prepare_payload();
+}
+
+std::unique_ptr<odb::database> UserController::createDatabase()  {
+  std::unique_ptr<odb::database> db(new odb::pgsql::database("postgres", "12341234", "app"));
+  return db;
 }

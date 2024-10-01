@@ -21,9 +21,15 @@ include_directories(
   vendor/dotenv/include
   vendor/bcrypt/include
   vendor/json-c/include
+  odb/src
   ${PROJECT_SOURCE_DIR}/include
   ${Boost_INCLUDE_DIRS}
   ${LIBPQXX_INCLUDE_DIRS}
+)
+
+# ODB Sources
+set(ODB_SOURCES
+  odb/src/users-odb.cxx
 )
 
 add_executable(template_service main.cpp
@@ -50,6 +56,8 @@ add_executable(template_service main.cpp
   src/controllers/ProjectController.cpp
   src/middleware/JwtAuth.cpp
   src/core/DB.cpp
+
+  ${ODB_SOURCES}
 )
 
-target_link_libraries(template_service ${LIBPQXX_LIBRARIES} ${Boost_LIBRARIES} pthread cpp_dotenv bcrypt json-c jwt-cpp::jwt-cpp)
+target_link_libraries(template_service ${LIBPQXX_LIBRARIES} ${Boost_LIBRARIES} pthread cpp_dotenv bcrypt json-c jwt-cpp::jwt-cpp odb odb-pgsql)

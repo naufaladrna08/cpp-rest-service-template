@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
     /* Initialize DB Connection */
     const std::string connectionStr = "dbname=" + dotenv::env["DB_NAME"] + " user=" + dotenv::env["DB_USER"] + " password=" + dotenv::env["DB_PASS"] + " hostaddr=" + dotenv::env["DB_HOST"] + " port=" + dotenv::env["DB_PORT"];
     std::cout << "Running on port " << APP_PORT << std::endl;
-    Connection::getInstance(connectionStr);
+    // Connection::getInstance(connectionStr);
 
     net::io_context ioc;
     tcp::acceptor acceptor(ioc, {tcp::v4(), APP_PORT});
