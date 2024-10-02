@@ -32,31 +32,19 @@ set(ODB_SOURCES
   odb/src/users-odb.cxx
 )
 
-add_executable(template_service main.cpp
-  include/controllers/UserController.h
-  include/controllers/RBACController.h
-  include/controllers/ProjectController.h
-  include/core/types.h
-  include/core/DB.h
-  include/core/Connection.h
-  include/core/exceptions/HttpException.h
-  include/core/database/Schema.h
-  include/core/database/Model.h
-  include/helpers/RequestHelper.h
-  include/middleware/JwtAuth.h
-  src/core/Connection.cpp
+set(APP_CORE_SOURCES
   src/core/exceptions/HttpException.cpp
-  src/core/database/Schema.cpp
-  src/core/database/Model.cpp
-  src/helpers/RequestHelper.cpp
-
-  src/models/User.cpp
-  src/controllers/UserController.cpp
-  src/controllers/RBACController.cpp
-  src/controllers/ProjectController.cpp
-  src/middleware/JwtAuth.cpp
+  src/core/exceptions/HttpException.cpp
+  src/core/Connection.cpp
   src/core/DB.cpp
+)
 
+add_executable(template_service 
+  main.cpp  
+  src/middleware/JwtAuth.cpp
+  src/controllers/UserController.cpp
+  src/helpers/RequestHelper.cpp
+  ${APP_CORE_SOURCES}
   ${ODB_SOURCES}
 )
 

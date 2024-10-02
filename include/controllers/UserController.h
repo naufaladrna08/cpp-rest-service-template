@@ -8,7 +8,6 @@
 #include <json.h>
 #include <bcrypt.h>
 #include <jwt-cpp/jwt.h>
-#include <models/User.h>
 #include <users-odb.hxx>
 #include <odb/database.hxx>
 #include <odb/transaction.hxx>

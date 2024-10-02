@@ -12,8 +12,6 @@
 #include <core/Connection.h>
 
 #include <controllers/UserController.h>
-#include <controllers/ProjectController.h>
-#include <controllers/RBACController.h>
 #include <middleware/JwtAuth.h>
 #define APP_PORT 8080
 
@@ -125,20 +123,6 @@ void handleRequests(Request req, Response& res) {
   route.connect("POST", "/auth/login", UserController::login);
   route.connect("GET", "/auth/me", UserController::profile, JwtAuth::verifyToken);
   route.connect("GET", "/users", UserController::getAllUsers);
-
-  // RBAC
-  MiddlewareUserdata userdata;
-  userdata.role = "Superuser";
-  route.connect("POST", "/role/create", RBACController::createRole, JwtAuth::verifyTokenWithRole, &userdata);
-  route.connect("POST", "/role/permission/create", RBACController::createPermission, JwtAuth::verifyTokenWithRole, &userdata);
-  route.connect("POST", "/role/assign", RBACController::assignRole, JwtAuth::verifyTokenWithRole, &userdata);
-
-   // Projects
-  route.connect("POST", "/project/create", ProjectController::createProject, JwtAuth::verifyTokenWithRole, &userdata);
-  // route.connect("GET", "/project/get-projects", ProjectController::getProjects, JwtAuth::verifyToken);
-  // route.connect("GET", "/project/get-project", ProjectController::getProject, JwtAuth::verifyToken);
-  // route.connect("PUT", "/project/update-project", ProjectController::updateProject, JwtAuth::verifyToken);
-  // route.connect("DELETE", "/project/delete-project", ProjectController::deleteProject, JwtAuth::verifyToken);
 
   App app;
   app.useRoute(route);

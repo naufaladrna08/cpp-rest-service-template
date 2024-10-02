@@ -6,7 +6,7 @@ bool JwtAuth::verifyToken(const Request& req, Response* res, void* userdata) {
     std::cout << data->role << std::endl;
   }
 
-  std::string token = req.base().at("Authorization");
+  std::string token = req.base().at("Authorization").to_string();
   if (token.empty()) {
     res->result(boost::beast::http::status::unauthorized);
     json_object* response = json_object_new_object();
@@ -60,7 +60,7 @@ bool JwtAuth::verifyTokenWithRole(const Request& req, Response* res, void* userd
     return false;
   }
 
-  std::string token = req.base().at("Authorization");
+  std::string token = req.base().at("Authorization").to_string();
   if (token.empty()) {
     res->result(boost::beast::http::status::unauthorized);
     json_object* response = json_object_new_object();
