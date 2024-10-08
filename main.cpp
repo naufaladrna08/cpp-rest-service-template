@@ -9,7 +9,7 @@
 
 #include <core/types.h>
 #include <dotenv.h>
-#include <core/Connection.h>
+#include <core/ODBConnection.h>
 
 #include <controllers/UserController.h>
 #include <controllers/ProjectController.h>
@@ -36,8 +36,8 @@ class Router {
     }
 
     void connect(
-      const std::string& method, const std::string& path, 
-      std::function<void(const Request&, Response*)> controller, 
+      const std::string& method, const std::string& path,
+      std::function<void(const Request&, Response*)> controller,
       std::function<bool(const Request&, Response*, void* userdata)> middleware = nullptr,
       void* data = nullptr
     ) {
@@ -46,7 +46,7 @@ class Router {
       route.path = path;
       route.controller = std::move(controller);
       route.middleware = std::move(middleware);
-      
+
       if (data != nullptr) {
         route.userdata = data;
       }
@@ -147,11 +147,15 @@ void handleRequests(Request req, Response& res) {
 int main(int argc, char** argv) {
   try {
     dotenv::env.load_dotenv(".env");
+    std::string connectionString = "dbname=" + dotenv::env["DB_NAME"] + " user=" + dotenv::env["DB_USER"] +
+        " password=" + dotenv::env["DB_PASS"] + " host=" +
+        dotenv::env["DB_HOST"] + " port=" + dotenv::env["DB_PORT"];
+
+    std::cout << "Connecting to database..." << std::endl;
+    std::cout << "Connection string: " << connectionString << std::endl;
 
     /* Initialize DB Connection */
-    const std::string connectionStr = "dbname=" + dotenv::env["DB_NAME"] + " user=" + dotenv::env["DB_USER"] + " password=" + dotenv::env["DB_PASS"] + " hostaddr=" + dotenv::env["DB_HOST"] + " port=" + dotenv::env["DB_PORT"];
-    std::cout << "Running on port " << APP_PORT << std::endl;
-    // Connection::getInstance(connectionStr);
+    OdbConnection::getInstance(connectionString);
 
     net::io_context ioc;
     tcp::acceptor acceptor(ioc, {tcp::v4(), APP_PORT});

@@ -14,7 +14,7 @@ class Connection {
 
     auto execute(const std::string& query) -> pqxx::result;
     auto executeWithTransaction(const std::string& query) ->pqxx::result;
-    
+
     void beginTransaction();
     void commitTransaction();
     void rollbackTransaction();

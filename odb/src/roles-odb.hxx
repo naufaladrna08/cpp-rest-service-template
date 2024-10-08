@@ -2,8 +2,8 @@
 // compiler for C++.
 //
 
-#ifndef USERS_ODB_HXX
-#define USERS_ODB_HXX
+#ifndef ROLES_ODB_HXX
+#define ROLES_ODB_HXX
 
 #include <odb/version.hxx>
 
@@ -13,7 +13,7 @@
 
 #include <odb/pre.hxx>
 
-#include "users.hxx"
+#include "roles.hxx"
 
 #include <memory>
 #include <cstddef>
@@ -33,25 +33,25 @@
 
 namespace odb
 {
-  // users
+  // roles
   //
   template <>
-  struct class_traits< ::users >
+  struct class_traits< ::roles >
   {
     static const class_kind kind = class_object;
   };
 
   template <>
-  class access::object_traits< ::users >
+  class access::object_traits< ::roles >
   {
     public:
-    typedef ::users object_type;
-    typedef ::users* pointer_type;
+    typedef ::roles object_type;
+    typedef ::roles* pointer_type;
     typedef odb::pointer_traits<pointer_type> pointer_traits;
 
     static const bool polymorphic = false;
 
-    typedef long unsigned int id_type;
+    typedef unsigned int id_type;
 
     static const bool auto_id = true;
 
@@ -86,22 +86,34 @@ namespace odb
 
 namespace odb
 {
-  // users
+  // roles
   //
   template <typename A>
-  struct query_columns< ::users, id_pgsql, A >
+  struct query_columns< ::roles, id_pgsql, A >
   {
     // id
     //
     typedef
     pgsql::query_column<
       pgsql::value_traits<
-        long unsigned int,
-        pgsql::id_bigint >::query_type,
-      pgsql::id_bigint >
+        unsigned int,
+        pgsql::id_integer >::query_type,
+      pgsql::id_integer >
     id_type_;
 
     static const id_type_ id;
+
+    // code
+    //
+    typedef
+    pgsql::query_column<
+      pgsql::value_traits<
+        ::std::string,
+        pgsql::id_string >::query_type,
+      pgsql::id_string >
+    code_type_;
+
+    static const code_type_ code;
 
     // name
     //
@@ -115,7 +127,7 @@ namespace odb
 
     static const name_type_ name;
 
-    // username
+    // type
     //
     typedef
     pgsql::query_column<
@@ -123,57 +135,113 @@ namespace odb
         ::std::string,
         pgsql::id_string >::query_type,
       pgsql::id_string >
-    username_type_;
+    type_type_;
 
-    static const username_type_ username;
+    static const type_type_ type;
 
-    // password
+    // project_id
     //
     typedef
     pgsql::query_column<
       pgsql::value_traits<
-        ::std::string,
-        pgsql::id_string >::query_type,
-      pgsql::id_string >
-    password_type_;
+        unsigned int,
+        pgsql::id_integer >::query_type,
+      pgsql::id_integer >
+    project_id_type_;
 
-    static const password_type_ password;
+    static const project_id_type_ project_id;
+
+    // is_active
+    //
+    typedef
+    pgsql::query_column<
+      pgsql::value_traits<
+        bool,
+        pgsql::id_boolean >::query_type,
+      pgsql::id_boolean >
+    is_active_type_;
+
+    static const is_active_type_ is_active;
+
+    // created_at
+    //
+    typedef
+    pgsql::query_column<
+      pgsql::value_traits<
+        long long int,
+        pgsql::id_timestamp >::query_type,
+      pgsql::id_timestamp >
+    created_at_type_;
+
+    static const created_at_type_ created_at;
+
+    // updated_at
+    //
+    typedef
+    pgsql::query_column<
+      pgsql::value_traits<
+        long long int,
+        pgsql::id_timestamp >::query_type,
+      pgsql::id_timestamp >
+    updated_at_type_;
+
+    static const updated_at_type_ updated_at;
   };
 
   template <typename A>
-  const typename query_columns< ::users, id_pgsql, A >::id_type_
-  query_columns< ::users, id_pgsql, A >::
+  const typename query_columns< ::roles, id_pgsql, A >::id_type_
+  query_columns< ::roles, id_pgsql, A >::
   id (A::table_name, "\"id\"", 0);
 
   template <typename A>
-  const typename query_columns< ::users, id_pgsql, A >::name_type_
-  query_columns< ::users, id_pgsql, A >::
+  const typename query_columns< ::roles, id_pgsql, A >::code_type_
+  query_columns< ::roles, id_pgsql, A >::
+  code (A::table_name, "\"code\"", 0);
+
+  template <typename A>
+  const typename query_columns< ::roles, id_pgsql, A >::name_type_
+  query_columns< ::roles, id_pgsql, A >::
   name (A::table_name, "\"name\"", 0);
 
   template <typename A>
-  const typename query_columns< ::users, id_pgsql, A >::username_type_
-  query_columns< ::users, id_pgsql, A >::
-  username (A::table_name, "\"username\"", 0);
+  const typename query_columns< ::roles, id_pgsql, A >::type_type_
+  query_columns< ::roles, id_pgsql, A >::
+  type (A::table_name, "\"type\"", 0);
 
   template <typename A>
-  const typename query_columns< ::users, id_pgsql, A >::password_type_
-  query_columns< ::users, id_pgsql, A >::
-  password (A::table_name, "\"password\"", 0);
+  const typename query_columns< ::roles, id_pgsql, A >::project_id_type_
+  query_columns< ::roles, id_pgsql, A >::
+  project_id (A::table_name, "\"project_id\"", 0);
 
   template <typename A>
-  struct pointer_query_columns< ::users, id_pgsql, A >:
-    query_columns< ::users, id_pgsql, A >
+  const typename query_columns< ::roles, id_pgsql, A >::is_active_type_
+  query_columns< ::roles, id_pgsql, A >::
+  is_active (A::table_name, "\"is_active\"", 0);
+
+  template <typename A>
+  const typename query_columns< ::roles, id_pgsql, A >::created_at_type_
+  query_columns< ::roles, id_pgsql, A >::
+  created_at (A::table_name, "\"created_at\"", 0);
+
+  template <typename A>
+  const typename query_columns< ::roles, id_pgsql, A >::updated_at_type_
+  query_columns< ::roles, id_pgsql, A >::
+  updated_at (A::table_name, "\"updated_at\"", 0);
+
+  template <typename A>
+  struct pointer_query_columns< ::roles, id_pgsql, A >:
+    query_columns< ::roles, id_pgsql, A >
   {
   };
 
   template <>
-  class access::object_traits_impl< ::users, id_pgsql >:
-    public access::object_traits< ::users >
+  class access::object_traits_impl< ::roles, id_pgsql >:
+    public access::object_traits< ::roles >
   {
     public:
     struct id_image_type
     {
-      long long id_value;
+      int id_value;
       bool id_null;
 
       std::size_t version;
@@ -183,8 +251,14 @@ namespace odb
     {
       // id_
       //
-      long long id_value;
+      int id_value;
       bool id_null;
+
+      // code_
+      //
+      details::buffer code_value;
+      std::size_t code_size;
+      bool code_null;
 
       // name_
       //
@@ -192,17 +266,31 @@ namespace odb
       std::size_t name_size;
       bool name_null;
 
-      // username_
+      // type_
       //
-      details::buffer username_value;
-      std::size_t username_size;
-      bool username_null;
+      details::buffer type_value;
+      std::size_t type_size;
+      bool type_null;
 
-      // password_
+      // project_id_
       //
-      details::buffer password_value;
-      std::size_t password_size;
-      bool password_null;
+      int project_id_value;
+      bool project_id_null;
+
+      // is_active_
+      //
+      bool is_active_value;
+      bool is_active_null;
+
+      // created_at_
+      //
+      long long created_at_value;
+      bool created_at_null;
+
+      // updated_at_
+      //
+      long long updated_at_value;
+      bool updated_at_null;
 
       std::size_t version;
     };
@@ -246,7 +334,7 @@ namespace odb
 
     typedef pgsql::query_base query_base_type;
 
-    static const std::size_t column_count = 4UL;
+    static const std::size_t column_count = 8UL;
     static const std::size_t id_column_count = 1UL;
     static const std::size_t inverse_column_count = 0UL;
     static const std::size_t readonly_column_count = 0UL;
@@ -268,6 +356,9 @@ namespace odb
 
     static void
     persist (database&, object_type&);
+
+    static pointer_type
+    find (database&, const id_type&);
 
     static bool
     find (database&, const id_type&, object_type&);
@@ -313,17 +404,17 @@ namespace odb
   };
 
   template <>
-  class access::object_traits_impl< ::users, id_common >:
-    public access::object_traits_impl< ::users, id_pgsql >
+  class access::object_traits_impl< ::roles, id_common >:
+    public access::object_traits_impl< ::roles, id_pgsql >
   {
   };
 
-  // users
+  // roles
   //
 }
 
-#include "users-odb.ixx"
+#include "roles-odb.ixx"
 
 #include <odb/post.hxx>
 
-#endif // USERS_ODB_HXX
+#endif // ROLES_ODB_HXX

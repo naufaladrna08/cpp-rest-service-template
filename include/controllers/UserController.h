@@ -12,8 +12,8 @@
 #include <users-odb.hxx>
 #include <odb/database.hxx>
 #include <odb/transaction.hxx>
-#include <memory>
 #include <odb/pgsql/database.hxx>
+#include <core/ODBConnection.h>
 
 class UserController {
   public:
@@ -23,9 +23,6 @@ class UserController {
     static void login(Request req, Response* res);
     static void getAllUsers(Request req, Response* res);
     static void profile(Request req, Response* res);
-
-  private:
-    std::unique_ptr<odb::database> createDatabase();
 };
 
 #endif //USERCONTROLLER_H

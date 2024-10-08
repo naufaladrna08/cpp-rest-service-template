@@ -1,4 +1,7 @@
+#include "core/ODBConnection.h"
 #include <controllers/UserController.h>
+#include <memory>
+#include <odb/database.hxx>
 
 UserController::UserController() {
 }
@@ -45,7 +48,7 @@ void UserController::login(Request req, Response *res) {
   json_object* payload = json_object_new_object();
   json_object_object_add(payload, "username", json_object_new_string(username));
   json_object_object_add(payload, "token", json_object_new_string(token.c_str()));
-  
+
 
   json_object* response = json_object_new_object();
   json_object_object_add(response, "message", json_object_new_string("Login successful."));
@@ -62,20 +65,7 @@ void UserController::registerUser(Request req, Response* res) {
 
   json_object* response = json_object_new_object();
   try {
-    // std::unique_ptr<User> user = std::make_unique<User>();
-    // std::unique_ptr<User> existingUser = user->findByValue<User>("username", username);
-    // if (existingUser != nullptr) {
-    //   throw HttpException(400, "Username already exists.");
-    // }
-
-    // user->fill("name", name);
-    // user->fill("username", username);
-    // user->fill("password", bcrypt::generateHash(password));
-    // if (!user->save()) {
-    //   throw HttpException(500, "An error occurred while creating the user.");
-    // }
-
-    std::unique_ptr<odb::core::database> db(new odb::pgsql::database("postgres", "12341234", "app", "localhost"));
+    std::shared_ptr<odb::database> db = OdbConnection::getInstance();
     odb::core::transaction t(db->begin());
     users u(name, username, bcrypt::generateHash(password));
     db->persist(u);
@@ -97,12 +87,12 @@ void UserController::registerUser(Request req, Response* res) {
 
 void UserController::getAllUsers(Request req, Response *res) {
   json_object* response = json_object_new_object();
-  
+
   try {
     auto users = User().select({"name", "username", "email", "user_roles.id AS role_id"})
       ->join("user_roles", "id", "user_id")
       ->get();
-    
+
     if (users.empty()) {
       throw HttpException(404, "No users found.");
     }
@@ -162,9 +152,4 @@ void UserController::profile(Request req, Response *res) {
   json_object_object_add(response, "message", json_object_new_string("User profile retrieved successfully."));
   res->body() = json_object_to_json_string(response);
   res->prepare_payload();
-}
-
-std::unique_ptr<odb::database> UserController::createDatabase()  {
-  std::unique_ptr<odb::database> db(new odb::pgsql::database("postgres", "12341234", "app"));
-  return db;
 }
