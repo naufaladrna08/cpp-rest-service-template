@@ -22,6 +22,7 @@ include_directories(
   vendor/bcrypt/include
   vendor/json-c/include
   odb/src
+  odb/model
   ${PROJECT_SOURCE_DIR}/include
   ${Boost_INCLUDE_DIRS}
   ${LIBPQXX_INCLUDE_DIRS}
@@ -30,6 +31,11 @@ include_directories(
 # ODB Sources
 set(ODB_SOURCES
   odb/src/users-odb.cxx
+  odb/src/userdatas-odb.cxx
+  odb/src/permissions-odb.cxx
+  odb/src/permission_roles-odb.cxx
+  odb/src/positions-odb.cxx
+  odb/src/roles-odb.cxx
 )
 
 add_executable(template_service main.cpp
@@ -39,12 +45,14 @@ add_executable(template_service main.cpp
   include/core/types.h
   include/core/DB.h
   include/core/Connection.h
+  include/core/ODBConnection.h
   include/core/exceptions/HttpException.h
   include/core/database/Schema.h
   include/core/database/Model.h
   include/helpers/RequestHelper.h
   include/middleware/JwtAuth.h
   src/core/Connection.cpp
+  src/core/ODBConnection.cpp
   src/core/exceptions/HttpException.cpp
   src/core/database/Schema.cpp
   src/core/database/Model.cpp
