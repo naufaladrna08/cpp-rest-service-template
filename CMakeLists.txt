@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.28)
 project(template_service)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-write-strings -Wno-deprecated-declarations")
 
 # Libpqxx
 find_package(PkgConfig REQUIRED)
@@ -15,12 +16,14 @@ add_subdirectory(vendor/dotenv)
 add_subdirectory(vendor/bcrypt)
 add_subdirectory(vendor/json-c)
 add_subdirectory(vendor/jwt-cpp)
+add_subdirectory(vendor/ws)
 
 include_directories(
   vendor/jwt-cpp/include
   vendor/dotenv/include
   vendor/bcrypt/include
   vendor/json-c/include
+  vendor/ws/include
   odb/src
   odb/model
   ${PROJECT_SOURCE_DIR}/include
@@ -38,34 +41,12 @@ set(ODB_SOURCES
   odb/src/roles-odb.cxx
 )
 
-add_executable(template_service main.cpp
-  include/controllers/UserController.h
-  include/controllers/RBACController.h
-  include/controllers/ProjectController.h
-  include/core/types.h
-  include/core/DB.h
-  include/core/Connection.h
-  include/core/ODBConnection.h
-  include/core/exceptions/HttpException.h
-  include/core/database/Schema.h
-  include/core/database/Model.h
-  include/helpers/RequestHelper.h
-  include/middleware/JwtAuth.h
-  src/core/Connection.cpp
-  src/core/ODBConnection.cpp
-  src/core/exceptions/HttpException.cpp
-  src/core/database/Schema.cpp
-  src/core/database/Model.cpp
-  src/helpers/RequestHelper.cpp
-
-  src/models/User.cpp
-  src/controllers/UserController.cpp
-  src/controllers/RBACController.cpp
-  src/controllers/ProjectController.cpp
-  src/middleware/JwtAuth.cpp
-  src/core/DB.cpp
-
+add_executable(template_service src/main.cpp
   ${ODB_SOURCES}
 )
 
-target_link_libraries(template_service ${LIBPQXX_LIBRARIES} ${Boost_LIBRARIES} pthread cpp_dotenv bcrypt json-c jwt-cpp::jwt-cpp odb odb-pgsql)
+target_link_libraries(template_service 
+  ws pq pthread cpp_dotenv bcrypt json-c jwt-cpp::jwt-cpp odb odb-pgsql 
+  ${LIBPQXX_LIBRARIES} 
+  ${Boost_LIBRARIES}
+)

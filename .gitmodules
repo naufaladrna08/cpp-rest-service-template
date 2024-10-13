@@ -10,3 +10,6 @@
 [submodule "vendor/jwt-cpp"]
 	path = vendor/jwt-cpp
 	url = https://github.com/Thalhammer/jwt-cpp
+[submodule "vendor/ws"]
+	path = vendor/ws
+	url = https://git.kincirangin.id/tridme-ws.git
